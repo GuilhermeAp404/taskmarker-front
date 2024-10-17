@@ -42,7 +42,6 @@ function Dashboard() {
     useEffect(()=>{
         async function getTaskList(){
             const startIn = new Date(startDate).toISOString().split('T')[0]
-            console.log(startIn)
             const response = await api.get(`/tasks/all?startIn=${startIn}`)
             .then(res=> res)
             .catch(err=> console.log(err))
