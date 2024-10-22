@@ -1,14 +1,13 @@
 import { Check, Trash, X } from 'lucide-react'
 import { useModal } from '../../context/ModalViewContext'
 import { TaskProps } from '../../../utils/types/Task.Type'
-import { api } from '../../../services/api'
-import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
+import { useTaskContext } from '../../context/TaskContext'
 
 export default function ModalViewTasks({task}:{task:TaskProps|undefined}) {
     const {handleModalVisible} = useModal()
-    const navigate =useNavigate()
+    const {updateTask, deleteTask}= useTaskContext()
     const viewRef = useRef<HTMLDivElement>(null)
     
     useEffect(()=>{
@@ -18,27 +17,24 @@ export default function ModalViewTasks({task}:{task:TaskProps|undefined}) {
     },[])
 
     async function handleDelete(){
-        await api.delete(`/tasks/${task?.id}`).then(res=>{
-            if(res.status===200){
+        if(task!==undefined){
+            const status = await deleteTask(task?.id)
+            if(status===200){
                 handleModalVisible()
                 toast.warning("Uma tarefa foi deletada")
-                setTimeout(()=>{
-                    navigate(0)
-                }, 1000)
             }
-        }).catch(err=>toast.error(err.response.data.message))
+        }
     }
     
     async function handleConclude(){
-        await api.put(`/tasks/${task?.id}`,{status:"CHECKED"}).then(res=>{
-            if(res.status===200){
+        if(task!==undefined){
+            task.status = "CHECKED"
+            const status = await updateTask(task)
+            if(status===200){
                 handleModalVisible()
                 toast.success("Parabéns! Você completou uma tarefa.")
-                setTimeout(()=>{
-                    navigate(0)
-                }, 1000)
             }
-        }).catch(err=>toast.error(err.response.data.message))
+        }
     }
 
     return (

@@ -5,11 +5,9 @@ import { Button } from '../button';
 import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Captions, ClockArrowDown, ClockArrowUp } from 'lucide-react';
-import { api } from '../../../services/api';
 import { useModal } from '../../context/ModalCreateContext';
 import moment from 'moment';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { useTaskContext } from '../../context/TaskContext';
 
 const schema = z.object({
     title: z.string().min(10, "Coloque um titulo de 10 caracteres").max(30, "Coloque um titulo de até 30 caracteres"),
@@ -29,7 +27,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export default function CreateTask() {
-    const navigate = useNavigate()
+    const {createTask}=useTaskContext()
     const {handleModalVisible}=useModal()
     const {register, handleSubmit, setValue, formState:{errors}} = useForm<FormData>({
         reValidateMode: 'onChange',
@@ -43,17 +41,11 @@ export default function CreateTask() {
             end: moment(`${data.date} ${data.end}`).format('YYYY-MM-DD HH:mm:ss'),
             description: data.description
         }
-        await api.post('/tasks/create', newTask)
-        .then(res=>{
-            if(res.status===201){
-                handleModalVisible()
-                toast.success("Uma nova tarefa foi cadastrada")
-                setTimeout(()=>{
-                    navigate(0)
-                }, 500)
-            }
-        })
-        .catch(err=> toast.error(err.response.data.message))
+
+        const status = await createTask(newTask)
+        if(status===201){
+            handleModalVisible()
+        }
     }
 
     useEffect(()=>{
