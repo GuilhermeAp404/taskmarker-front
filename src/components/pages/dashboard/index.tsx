@@ -31,8 +31,6 @@ function Dashboard() {
     }, [startDate, endDate])
 
     useEffect(()=>{
-    },[])   
-    useEffect(()=>{
         async function getTaskList(){
             if(tasks){
                 let taskList:DateDisplayProps[] = []
@@ -50,6 +48,7 @@ function Dashboard() {
         }
         getTaskList()
     }, [tasks, startDate])
+    
     return (
         <>
             <Header/>
