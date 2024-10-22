@@ -27,7 +27,7 @@ export function useTask(){
 
     async function getTasks(date:String){
         try{
-            const res = await api.get(`/tasks/all?${date}`)
+            const res = await api.get(`/tasks/all?startIn${date}`)
             if(res.status===200) setTasks(res.data.tasks)
 
         }catch(err){

@@ -14,21 +14,25 @@ interface DateDisplayProps{
 
 
 function Dashboard() {
-    const {tasks}=useTaskContext()
+    const {tasks, getTasks}=useTaskContext()
     const [startDate, setStartDate] = useState(new Date())
     const [endDate, setEndDate] = useState(addDays(new Date(), 5))
     
     const [taskList, setTaskList]=useState<DateDisplayProps[]>([])
     
-    const advanceTime =useCallback(()=>{
+    const advanceTime =useCallback(async()=>{
         setStartDate(addDays(startDate, 5))
         setEndDate(addDays(endDate, 5))
-    }, [startDate, endDate])
+
+        await getTasks(addDays(startDate, 5).toISOString().split("T")[0])
+    }, [startDate, endDate, getTasks])
     
-    const backTime = useCallback(()=>{
+    const backTime = useCallback(async()=>{
         setStartDate(subtractDays(startDate, 5))
         setEndDate(subtractDays(endDate, 5))
-    }, [startDate, endDate])
+
+        await getTasks(subtractDays(startDate, 5).toISOString().split("T")[0])
+    }, [startDate, endDate, getTasks])
 
     useEffect(()=>{
         async function getTaskList(){
