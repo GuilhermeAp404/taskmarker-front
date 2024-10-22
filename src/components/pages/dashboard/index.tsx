@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useAuthContext } from '../../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
 import { Header } from '../../layout/header'
 import { CircleArrowLeft, CircleArrowRight } from 'lucide-react'
 import { addDays } from '../../../utils/incrementeDate'
 import { subtractDays } from '../../../utils/decrementeDate'
-import { api } from '../../../services/api'
 import { TaskProps } from '../../../utils/types/Task.Type'
 import Task from '../../layout/task'
+import { useTaskContext } from '../../context/TaskContext'
 
 interface DateDisplayProps{
     date:string
@@ -16,9 +14,7 @@ interface DateDisplayProps{
 
 
 function Dashboard() {
-    const {authenticated} = useAuthContext()
-    const navigate = useNavigate()
-    
+    const {tasks}=useTaskContext()
     const [startDate, setStartDate] = useState(new Date())
     const [endDate, setEndDate] = useState(addDays(new Date(), 5))
     
@@ -33,22 +29,10 @@ function Dashboard() {
         setStartDate(subtractDays(startDate, 5))
         setEndDate(subtractDays(endDate, 5))
     }, [startDate, endDate])
-    useEffect(()=>{
-        if(!authenticated){
-            navigate('/')
-        }
-    },[authenticated, navigate])   
 
     useEffect(()=>{
         async function getTaskList(){
-            const startIn = new Date(startDate).toISOString().split('T')[0]
-            const response = await api.get(`/tasks/all?startIn=${startIn}`)
-            .then(res=> res)
-            .catch(err=> console.log(err))
-            
-
-            if(response?.status===200){
-                const tasks:TaskProps[] = response.data.tasks
+            if(tasks){
                 let taskList:DateDisplayProps[] = []
                 for(let i=0; i<=5; i++){
                     let date = addDays(startDate, i).toISOString().split('T')[0]
@@ -63,7 +47,8 @@ function Dashboard() {
             }
         }
         getTaskList()
-    }, [startDate])
+    }, [tasks, startDate])
+    
     return (
         <>
             <Header/>

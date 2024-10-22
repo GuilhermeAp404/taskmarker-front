@@ -7,6 +7,13 @@ export interface TaskProps{
     end:string
 }
 
+export interface TaskFormProps{
+    title:string
+    description:string
+    start:string
+    end:string
+}
+
 export interface TaskDisplayProps{
     day:Date
     dayTask:TaskProps[]
