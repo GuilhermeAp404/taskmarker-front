@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { LoginFormType, SingUpFormType, UserProps } from "../utils/types/Auth.Type";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 
 export function useAuth(){
@@ -10,57 +11,83 @@ export function useAuth(){
     const [user, setUser]=useState<UserProps|undefined>()
     const navigate = useNavigate()
 
-    async function singUp(data:SingUpFormType){
-        await api.post('/user/register', data)
-        .then((res)=>{
-            if(res.status===201){
-                navigate('/')
-                setTimeout(()=>{
-                    toast.success("Cadastrado com sucesso!")
-                }, 500)
-            } 
-        })
-        .catch(err=> toast.error(err.response.data.message))
-    }
-
-    async function login(data:LoginFormType){
-        await api.post('/user/login', data)
-        .then(res=>{
-            if(res.data.auth){
-                api.defaults.headers.Authorization = `Bearer ${res.data.token}`
-                localStorage.setItem('token', JSON.stringify(res.data.token))
-                setAuthenticated(true)
-                getUser()
-                navigate('/dashboard')
-                setTimeout(()=>{
-                    toast.success("Seja Bem-vindo")
-                }, 500)
-            }
-        }).catch(err=> toast.error(err.response.data.message))
-
-    }
-
     const logout= useCallback(()=>{
         api.defaults.headers.Authorization = ""
         localStorage.removeItem('token')
+
         setUser(undefined)
         setAuthenticated(false)
+
         navigate('/')
         setTimeout(()=>{
             toast.warning("Você foi deslogado")
         }, 500)
+
     },[navigate])
 
-    const getUser = useCallback(()=>{
-        async function get() {
-            await api.get('/user')
-            .then(res=> {
+    const getUser = useCallback(async ()=>{
+        try{
+            const res = await api.get('/user')
+            if(res.status===200){
+                setAuthenticated(true)
                 setUser(res.data.user)
-            })
-            .catch(err=> logout())
+
+                navigate('/dashboard')
+            }else{
+                logout()
+            }
+
+        }catch(error){
+            toast.error("Erro ao obter informações do usuário");
+            logout()
         }
-        get()
-    },[logout])
+    },[logout, navigate])
+
+    async function singUp(data:SingUpFormType){
+        try{
+            const res = await api.post('/user/register', data)
+            if(res.status===201){
+                navigate('/')
+
+                setTimeout(()=>{
+                    toast.success("Cadastrado com sucesso!")
+                }, 500)
+            } 
+
+        }catch(err){
+            if (err instanceof AxiosError) {
+                toast.error(err.response?.data?.message || "Erro ao cadastrar");
+            } else {
+                toast.error("Ocorreu um erro inesperado");
+            }
+
+        }
+    }
+
+    async function login(data:LoginFormType){
+        try{
+            const res = await api.post('/user/login', data)
+            if(res.data.auth===true){
+                api.defaults.headers.Authorization = `Bearer ${res.data.token}`;
+                localStorage.setItem('token', JSON.stringify(res.data.token));
+
+                setAuthenticated(true)
+                await getUser()
+
+                setTimeout(() => {
+                    toast.success("Seja Bem-vindo");
+                }, 500);
+            }
+
+        }catch(err){
+            if (err instanceof AxiosError) {
+                toast.error(err.response?.data?.message || "Erro ao logar");
+            } else {
+                toast.error("Ocorreu um erro inesperado");
+            }
+
+        }
+    }
 
     useEffect(()=>{
         async function authenticatedUser() {
@@ -69,8 +96,8 @@ export function useAuth(){
                 api.defaults.headers.Authorization = `Bearer ${JSON.parse(token)}`
                 setAuthenticated(true)
                 await getUser()
-                navigate('/dashboard')
             }
+            
         }
 
         authenticatedUser()

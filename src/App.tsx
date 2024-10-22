@@ -1,18 +1,24 @@
 import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+
 import Login from "./components/pages/login";
 import Register from "./components/pages/register";
-import {AuthProvider} from "./components/context/AuthContext";
 import Dashboard from "./components/pages/dashboard";
+
+import {AuthProvider} from "./components/context/AuthContext";
 import { ModalCreateProvider } from "./components/context/ModalCreateContext";
 import { ModalViewProvider } from "./components/context/ModalViewContext";
+
 import { Toaster } from "sonner";
 import { CircleCheck, CircleX, TriangleAlert } from "lucide-react";
+import ProtectedRoute from "./components/layout/protectedRoute";
+import { TaskProvider } from "./components/context/TaskContext";
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <TaskProvider>
           <ModalCreateProvider>          
             <ModalViewProvider>
               <Toaster
@@ -35,12 +41,13 @@ function App() {
               <Routes>
                 <Route path="/" element={<Login/>}/>
                 <Route path="/register" element={<Register/>}/>
-                <Route path="/dashboard" element={<Dashboard/>}/>
+                <Route path="/dashboard" element={<ProtectedRoute children={<Dashboard/>}/>}/>
               </Routes>
             </ModalViewProvider>
           </ModalCreateProvider>
-        </AuthProvider>
-      </BrowserRouter>
+        </TaskProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
